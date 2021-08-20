@@ -22,9 +22,15 @@ export const StringToTimeTransformerEditor: React.FC<TransformerUIProps<StringTo
   const fieldNames = useAllFieldNamesFromDataFrames(input);
   const selectableFieldNames = fieldNames.map((f) => ({ label: f, value: f }));
 
-  const onSelectField = useCallback((value: SelectableValue<string>) => {
-    console.log(value);
-  }, []);
+  const onSelectField = useCallback(
+    (value: SelectableValue<string>) => {
+      onChange({
+        ...options,
+        targetField: value.value,
+      });
+    },
+    [onChange, options]
+  );
 
   //TODO
   //show units for fields
@@ -32,12 +38,12 @@ export const StringToTimeTransformerEditor: React.FC<TransformerUIProps<StringTo
   return (
     <div>
       <InlineFieldRow>
-        <InlineField label="Field" grow={true}>
+        <InlineField label={stringToTimeFieldInfo.targetField.label} grow={true}>
           <Select
             menuShouldPortal
             options={selectableFieldNames}
             value={options.targetField}
-            placeholder="Select field"
+            placeholder={stringToTimeFieldInfo.targetField.description}
             onChange={onSelectField}
           />
         </InlineField>
