@@ -2,10 +2,9 @@ import { SynchronousDataTransformerInfo } from '../../types';
 import { map } from 'rxjs/operators';
 
 import { DataTransformerID } from './ids';
-import { DataFrame } from '../../types/dataFrame';
-import { data } from 'jquery';
+import { DataFrame, Field, FieldType } from '../../types/dataFrame';
 import { dateTimeParse } from '../../datetime';
-import { cloneDeep } from 'lodash';
+import { isFinite, isNumber } from 'lodash';
 import { ArrayVector } from '../../vector';
 
 export interface StringToTimeTransformerOptions {
@@ -13,9 +12,10 @@ export interface StringToTimeTransformerOptions {
   dateFormat?: string;
 }
 
-interface FrameFieldIdx {
-  frameIdx: number;
-  fieldIdx: number;
+export interface FieldConversionOptions {
+  name: string;
+  type: FieldType;
+  dateFormat?: string;
 }
 
 /**
@@ -26,7 +26,15 @@ interface FrameFieldIdx {
 export const stringToTimeFieldInfo = {
   targetField: {
     label: 'Target field',
-    description: 'Select the target field to parse',
+    description: 'Select the target field',
+  },
+  destinationType: {
+    label: 'Type to convert to',
+    description: 'Select the type to convert',
+  },
+  dateFormat: {
+    label: 'Date Format',
+    description: 'Select the desired date format',
   },
 };
 
@@ -58,53 +66,54 @@ export const stringToTimeTransformer: SynchronousDataTransformerInfo<StringToTim
 /**
  * @alpha
  */
-export function stringToTime(options: StringToTimeTransformerOptions, frames: DataFrame[]): DataFrame[] | undefined {
+export function stringToTime(options: StringToTimeTransformerOptions, frames: DataFrame[]): DataFrame[] {
   if (!options.targetField) {
-    return undefined;
+    return frames;
   }
 
-  //get idx of dataFrame and field
-  const frameFieldIdxs = findIndicesByFieldName(options.targetField, frames);
+  const frameCopy: DataFrame[] = [];
 
-  //if there's an idx
-  if (frameFieldIdxs) {
-    const targetFrame = frames[frameFieldIdxs.frameIdx];
-    const targetFieldValues = targetFrame.fields[frameFieldIdxs.fieldIdx].values.toArray();
-
-    let timeArray = new ArrayVector();
-    for (let i = 0; i < targetFieldValues.length; i++) {
-      const parsed = dateTimeParse(targetFieldValues[i]);
-      //TODO
-      //validate if time otherwise handle error
-      timeArray.add(parsed);
-    }
-
-    //TODO
-    //add error handling specific to transformers?
-    if (timeArray.length < targetFieldValues.length) {
-      return undefined;
-    }
-
-    const framesCopy = cloneDeep(frames);
-    framesCopy[frameFieldIdxs.frameIdx].fields[frameFieldIdxs.fieldIdx].values = timeArray;
-    return framesCopy;
-  }
-  return undefined;
-}
-
-/**
- * helper function to get indices for dataframe and field
- */
-function findIndicesByFieldName(targetField: string, frames: DataFrame[]): FrameFieldIdx | undefined {
-  for (let frameIndex = 0; frameIndex < data.length; frameIndex++) {
-    const frame = frames[frameIndex];
-
-    for (let fieldIndex = 0; fieldIndex < frame.fields.length; fieldIndex++) {
-      const field = frame.fields[fieldIndex];
-      if (field.name === targetField) {
-        return { frameIdx: frameIndex, fieldIdx: fieldIndex };
+  for (const frame of frames) {
+    for (let i = 0; i < frame.fields.length; i++) {
+      let field = frame.fields[i];
+      if (field.name === options.targetField) {
+        //check in about matchers with Ryan
+        frame.fields[i] = ensureTimeField(field, options.dateFormat);
+        break;
       }
     }
+    frameCopy.push(frame);
   }
-  return undefined;
+  return frameCopy;
+}
+
+function stringToTimeField(field: Field, dateFormat?: string): Field {
+  const timeValues = field.values.toArray().map((value) => {
+    if (value) {
+      let parsed;
+      if (dateFormat) {
+        parsed = dateTimeParse(value, { format: dateFormat });
+      } else {
+        parsed = dateTimeParse(value).valueOf();
+      }
+      return isFinite(parsed) ? parsed : undefined;
+    }
+    return undefined;
+  });
+
+  return {
+    ...field,
+    type: FieldType.time,
+    values: new ArrayVector(timeValues),
+  };
+}
+
+export function ensureTimeField(field: Field, dateFormat?: string): Field {
+  //already time
+  if ((field.type === FieldType.time && field.values.length) || isNumber(field.values.get(0))) {
+    return field;
+  }
+  //TO DO
+  //add more checks
+  return stringToTimeField(field, dateFormat);
 }

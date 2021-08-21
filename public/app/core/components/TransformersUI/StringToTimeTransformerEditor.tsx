@@ -33,8 +33,10 @@ export const StringToTimeTransformerEditor: React.FC<TransformerUIProps<StringTo
   );
 
   //TODO
-  //show units for fields
   //add date format option
+  //refactor to FieldNamePicker
+  //show units for fields
+
   return (
     <div>
       <InlineFieldRow>

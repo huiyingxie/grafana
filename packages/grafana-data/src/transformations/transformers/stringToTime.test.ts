@@ -1,8 +1,7 @@
 import { toDataFrame } from '../../dataframe/processDataFrame';
 import { FieldType } from '../../types/dataFrame';
 import { mockTransformationsRegistry } from '../../utils/tests/mockTransformationsRegistry';
-import { DataTransformerID } from './ids';
-import { stringToTime, stringToTimeTransformer } from './stringToTime';
+import { ensureTimeField, stringToTime, stringToTimeTransformer } from './stringToTime';
 
 const stringTime = toDataFrame({
   fields: [
@@ -66,7 +65,7 @@ const misformattedStrings = toDataFrame({
 });
 
 //add case for dates with specified format
-describe('string to time', () => {
+describe('field conversion transformer', () => {
   beforeAll(() => {
     mockTransformationsRegistry([stringToTimeTransformer]);
   });
@@ -84,34 +83,15 @@ describe('string to time', () => {
         values: f.values.toArray(),
         config: f.config,
       }))
-    ).toMatchInlineSnapshot(`
-              Array [
-                Object {
-                  "config": Object {},
-                  "name": "proper dates",
-                  "type": "time",
-                  "values": Array [
-                    "2021-07-19 00:00:00.000",
-                    "2021-07-23 00:00:00.000",
-                    "2021-07-25 00:00:00.000",
-                    "2021-08-01 00:00:00.000",
-                    "2021-08-02 00:00:00.000",
-                  ],
-                },
-                Object {
-                  "config": Object {},
-                  "name": "A",
-                  "type": "number",
-                  "values": Array [
-                      1,
-                      2,
-                      3,
-                      4,
-                      5,
-                  ],
-                },
-              ]
-            `);
+    ).toEqual([
+      {
+        config: {},
+        name: 'proper dates',
+        type: 'time',
+        values: [1626674400000, 1627020000000, 1627192800000, 1627797600000, 1627884000000],
+      },
+      { config: {}, name: 'A', type: 'number', values: [1, 2, 3, 4, 5] },
+    ]);
   });
 
   it('will not parse improperly formatted date strings', () => {
@@ -127,34 +107,38 @@ describe('string to time', () => {
         values: f.values.toArray(),
         config: f.config,
       }))
-    ).toMatchInlineSnapshot(`
-            Array [
-              Object {
-                "config": Object {
-                },
-                "name": "misformatted dates",
-                "type": "string",
-                "values": Array [
-                      "2021/08-01 00:00.00:000",
-                      "2021/08/01 00.00-000",
-                      "2021/08-01 00:00.00:000",
-                      undefined,
-                      undefined,
-                    ],
-                },
-              Object {
-                "config": Object {},
-                "name": "A",
-                "type": "number",
-                "values": Array [
-                    1,
-                    2,
-                    3,
-                    4,
-                    5,
-                ],
-              },
-            ]
-          `);
+    ).toEqual([
+      {
+        name: 'misformatted dates',
+        type: FieldType.time,
+        values: [undefined, undefined, undefined, undefined, undefined],
+        config: { unit: 'time' },
+      },
+      { config: {}, name: 'A', type: FieldType.number, values: [1, 2, 3, 4, 5] },
+    ]);
+  });
+});
+
+describe('string to time field with specified date format', () => {
+  it('will convert a field to a specified date format', () => {
+    const options = {
+      targetField: 'proper dates',
+      type: 'time',
+      dateFormat: 'YYYY-MM-DD HH:MM:SS',
+    };
+
+    const timeified = ensureTimeField(stringTime.fields[0], options.dateFormat);
+    expect(timeified).toEqual({
+      name: 'proper dates',
+      type: FieldType.time,
+      values: [
+        '2021-07-19 00:00:00',
+        '2021-07-23 00:00:00',
+        '2021-07-25 00:00:00',
+        '2021-08-01 00:00:00',
+        '2021-08-02 00:00:00',
+      ],
+      config: {},
+    });
   });
 });
