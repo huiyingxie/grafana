@@ -9,12 +9,13 @@ import { ArrayVector } from '../../vector';
 
 export interface StringToTimeTransformerOptions {
   targetField: string | undefined;
+  destinationType: FieldType | undefined;
   dateFormat?: string;
 }
 
 export interface FieldConversionOptions {
-  name: string;
-  type: FieldType;
+  targetField: string | undefined;
+  destinationType: FieldType | undefined;
   dateFormat?: string;
 }
 
@@ -74,12 +75,11 @@ export function stringToTime(options: StringToTimeTransformerOptions, frames: Da
   const frameCopy: DataFrame[] = [];
 
   for (const frame of frames) {
-    for (let i = 0; i < frame.fields.length; i++) {
-      let field = frame.fields[i];
+    for (let fieldIdx = 0; fieldIdx < frame.fields.length; fieldIdx++) {
+      let field = frame.fields[fieldIdx];
       if (field.name === options.targetField) {
         //check in about matchers with Ryan
-        frame.fields[i] = ensureTimeField(field, options.dateFormat);
-        break;
+        frame.fields[fieldIdx] = ensureTimeField(field, options.dateFormat);
       }
     }
     frameCopy.push(frame);
