@@ -176,6 +176,7 @@ steps:
   - cp dist/*.tar.gz* packaging/docker/
   depends_on:
   - package
+  - end-to-end-tests-server
 
 - name: build-docker-images
   image: grafana/drone-grafana-docker:0.3.2
@@ -185,6 +186,7 @@ steps:
     edition: oss
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: postgres-integration-tests
   image: grafana/build-container:1.4.1
@@ -435,6 +437,20 @@ steps:
   - build-storybook
   - end-to-end-tests
 
+- name: test-a11y-frontend
+  image: buildkite/puppeteer
+  commands:
+  - ./e2e/wait-for-grafana
+  - yarn -s test:accessibility --json > pa11y-ci-results.json 1>&2
+  environment:
+    GRAFANA_MISC_STATS_API_KEY:
+      from_secret: grafana_misc_stats_api_key
+    HOST: end-to-end-tests-server
+    PORT: 3001
+  failure: ignore
+  depends_on:
+  - end-to-end-tests-server
+
 - name: publish-frontend-metrics
   image: grafana/build-container:1.4.1
   commands:
@@ -444,7 +460,7 @@ steps:
       from_secret: grafana_misc_stats_api_key
   failure: ignore
   depends_on:
-  - build-frontend
+  - test-a11y-frontend
 
 - name: build-frontend-docs
   image: grafana/build-container:1.4.1
@@ -460,6 +476,7 @@ steps:
   - cp dist/*.tar.gz* packaging/docker/
   depends_on:
   - package
+  - end-to-end-tests-server
 
 - name: build-docker-images
   image: grafana/drone-grafana-docker:0.3.2
@@ -471,6 +488,7 @@ steps:
       from_secret: docker_user
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: build-docker-images-ubuntu
   image: grafana/drone-grafana-docker:0.3.2
@@ -483,6 +501,7 @@ steps:
       from_secret: docker_user
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: postgres-integration-tests
   image: grafana/build-container:1.4.1
@@ -526,6 +545,7 @@ steps:
       from_secret: github_package_token
   depends_on:
   - end-to-end-tests
+  - end-to-end-tests-server
 
 - name: upload-packages
   image: grafana/grafana-ci-deploy:1.3.1
@@ -537,6 +557,7 @@ steps:
   depends_on:
   - package
   - end-to-end-tests
+  - end-to-end-tests-server
   - mysql-integration-tests
   - postgres-integration-tests
 
@@ -892,6 +913,7 @@ steps:
   - cp dist/*.tar.gz* packaging/docker/
   depends_on:
   - package
+  - end-to-end-tests-server
 
 - name: build-docker-images
   image: grafana/drone-grafana-docker:0.3.2
@@ -903,6 +925,7 @@ steps:
       from_secret: docker_user
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: build-docker-images-ubuntu
   image: grafana/drone-grafana-docker:0.3.2
@@ -915,6 +938,7 @@ steps:
       from_secret: docker_user
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: postgres-integration-tests
   image: grafana/build-container:1.4.1
@@ -969,6 +993,7 @@ steps:
   depends_on:
   - package
   - end-to-end-tests
+  - end-to-end-tests-server
   - mysql-integration-tests
   - postgres-integration-tests
 
@@ -1295,6 +1320,7 @@ steps:
   - cp dist/*.tar.gz* packaging/docker/
   depends_on:
   - package
+  - end-to-end-tests-server
 
 - name: build-docker-images
   image: grafana/drone-grafana-docker:0.3.2
@@ -1306,6 +1332,7 @@ steps:
       from_secret: docker_user
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: build-docker-images-ubuntu
   image: grafana/drone-grafana-docker:0.3.2
@@ -1318,6 +1345,7 @@ steps:
       from_secret: docker_user
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: postgres-integration-tests
   image: grafana/build-container:1.4.1
@@ -1394,6 +1422,7 @@ steps:
   depends_on:
   - package
   - end-to-end-tests
+  - end-to-end-tests-server
   - mysql-integration-tests
   - postgres-integration-tests
   - redis-integration-tests
@@ -1459,6 +1488,7 @@ steps:
   depends_on:
   - package-enterprise2
   - end-to-end-tests-enterprise2
+  - end-to-end-tests-server
   - mysql-integration-tests
   - postgres-integration-tests
   - redis-integration-tests
@@ -1855,6 +1885,7 @@ steps:
   - cp dist/*.tar.gz* packaging/docker/
   depends_on:
   - package
+  - end-to-end-tests-server
 
 - name: build-docker-images
   image: grafana/drone-grafana-docker:0.3.2
@@ -1863,6 +1894,7 @@ steps:
     edition: oss
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: build-docker-images-ubuntu
   image: grafana/drone-grafana-docker:0.3.2
@@ -1872,6 +1904,7 @@ steps:
     ubuntu: true
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: postgres-integration-tests
   image: grafana/build-container:1.4.1
@@ -1926,6 +1959,7 @@ steps:
   depends_on:
   - package
   - end-to-end-tests
+  - end-to-end-tests-server
   - mysql-integration-tests
   - postgres-integration-tests
 
@@ -2247,6 +2281,7 @@ steps:
   - cp dist/*.tar.gz* packaging/docker/
   depends_on:
   - package
+  - end-to-end-tests-server
 
 - name: build-docker-images
   image: grafana/drone-grafana-docker:0.3.2
@@ -2255,6 +2290,7 @@ steps:
     edition: enterprise
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: build-docker-images-ubuntu
   image: grafana/drone-grafana-docker:0.3.2
@@ -2264,6 +2300,7 @@ steps:
     ubuntu: true
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: postgres-integration-tests
   image: grafana/build-container:1.4.1
@@ -2340,6 +2377,7 @@ steps:
   depends_on:
   - package
   - end-to-end-tests
+  - end-to-end-tests-server
   - mysql-integration-tests
   - postgres-integration-tests
   - redis-integration-tests
@@ -2405,6 +2443,7 @@ steps:
   depends_on:
   - package-enterprise2
   - end-to-end-tests-enterprise2
+  - end-to-end-tests-server
   - mysql-integration-tests
   - postgres-integration-tests
   - redis-integration-tests
@@ -2797,6 +2836,7 @@ steps:
   - cp dist/*.tar.gz* packaging/docker/
   depends_on:
   - package
+  - end-to-end-tests-server
 
 - name: build-docker-images
   image: grafana/drone-grafana-docker:0.3.2
@@ -2805,6 +2845,7 @@ steps:
     edition: oss
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: build-docker-images-ubuntu
   image: grafana/drone-grafana-docker:0.3.2
@@ -2814,6 +2855,7 @@ steps:
     ubuntu: true
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: postgres-integration-tests
   image: grafana/build-container:1.4.1
@@ -2868,6 +2910,7 @@ steps:
   depends_on:
   - package
   - end-to-end-tests
+  - end-to-end-tests-server
   - mysql-integration-tests
   - postgres-integration-tests
 
@@ -3167,6 +3210,7 @@ steps:
   - cp dist/*.tar.gz* packaging/docker/
   depends_on:
   - package
+  - end-to-end-tests-server
 
 - name: build-docker-images
   image: grafana/drone-grafana-docker:0.3.2
@@ -3175,6 +3219,7 @@ steps:
     edition: enterprise
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: build-docker-images-ubuntu
   image: grafana/drone-grafana-docker:0.3.2
@@ -3184,6 +3229,7 @@ steps:
     ubuntu: true
   depends_on:
   - copy-packages-for-docker
+  - end-to-end-tests-server
 
 - name: postgres-integration-tests
   image: grafana/build-container:1.4.1
@@ -3260,6 +3306,7 @@ steps:
   depends_on:
   - package
   - end-to-end-tests
+  - end-to-end-tests-server
   - mysql-integration-tests
   - postgres-integration-tests
   - redis-integration-tests
@@ -3325,6 +3372,7 @@ steps:
   depends_on:
   - package-enterprise2
   - end-to-end-tests-enterprise2
+  - end-to-end-tests-server
   - mysql-integration-tests
   - postgres-integration-tests
   - redis-integration-tests
@@ -3529,6 +3577,6 @@ get:
 
 ---
 kind: signature
-hmac: 80b19bbc75555ea1f675017ec9b98241b331a624a5f4ee7f3b169b75258d51be
+hmac: ff4f66e40485ce90a3259d04ec562033e5b37013f0902d71a602c1a1572e1f27
 
 ...
