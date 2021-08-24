@@ -16,6 +16,7 @@ import { Subscription } from 'rxjs';
 import { DashboardPanelsChangedEvent } from 'app/types/events';
 import { GridPos } from '../state/PanelModel';
 import { config } from '@grafana/runtime';
+import { urlUtil } from '@grafana/data';
 
 export interface Props {
   dashboard: DashboardModel;
@@ -223,7 +224,13 @@ export class DashboardGrid extends PureComponent<Props, State> {
             return null;
           }
 
-          const draggable = width <= 769 ? false : dashboard.meta.canEdit;
+          let draggable = width <= 769 ? false : dashboard.meta.canEdit;
+          let isResizeable = dashboard.meta.canEdit;
+          const params = urlUtil.getUrlSearchParams();
+          if (params.kiosk === 'tv') {
+            draggable = false;
+            isResizeable = false;
+          }
 
           /*
             Disable draggable if mobile device, solving an issue with unintentionally
@@ -235,7 +242,7 @@ export class DashboardGrid extends PureComponent<Props, State> {
             <ReactGridLayout
               width={width}
               isDraggable={draggable}
-              isResizable={dashboard.meta.canEdit}
+              isResizable={isResizeable}
               containerPadding={[0, 0]}
               useCSSTransforms={false}
               margin={[GRID_CELL_VMARGIN, GRID_CELL_VMARGIN]}

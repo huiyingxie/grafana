@@ -1,5 +1,6 @@
 import React, { FC, HTMLAttributes, MouseEvent, ReactElement, useCallback, useState } from 'react';
 import { CartesianCoords2D } from '@grafana/data';
+import { KioskMode } from '../../../../types';
 
 interface PanelHeaderMenuTriggerApi {
   panelMenuOpen: boolean;
@@ -15,6 +16,11 @@ export const PanelHeaderMenuTrigger: FC<Props> = ({ children, ...divProps }) => 
   const [panelMenuOpen, setPanelMenuOpen] = useState<boolean>(false);
   const onMenuToggle = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
+      const query = new URLSearchParams(location.search);
+      const kiosk = query.get('kiosk') as KioskMode;
+      if (kiosk === 'tv') {
+        return;
+      }
       if (!isClick(clickCoordinates, eventToClickCoordinates(event))) {
         return;
       }

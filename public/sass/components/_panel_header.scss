@@ -25,7 +25,6 @@ $panel-header-no-title-zindex: 1;
 }
 
 .panel-title-container {
-  cursor: move;
   word-wrap: break-word;
   display: block;
 }
@@ -53,7 +52,6 @@ $panel-header-no-title-zindex: 1;
   position: absolute;
   top: calc(50% - 9px);
   color: $text-color-weak;
-  cursor: pointer;
   margin: 2px 0 0 2px;
   visibility: hidden;
   opacity: 0;
